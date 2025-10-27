@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
     [Header("Firefly Spawn Settings")]
     public GameObject fireflyPrefab;
     public int startFireflyCount = 15;
-    public float fireflySpawnInterval = 5;
+    public float fireflySpawnInterval = 2.0f;
 
     [Header("Spawn Area (World Space)")]
     public float xMin = -5f;

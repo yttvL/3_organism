@@ -16,6 +16,8 @@ public class FireflyController : MonoBehaviour
     public int maxFlashes = 3;
     public Color normalColor = Color.yellow;
     public Color flashColor = Color.white;
+    public float flashInterval = 12f;
+    public float flashTimer = 12f;
 
     private SpriteRenderer sr;
 
@@ -24,6 +26,7 @@ public class FireflyController : MonoBehaviour
         sr = GetComponent<SpriteRenderer>();
         sr.color = normalColor;
         PickNewDirection();
+        flashTimer = flashInterval;
     }
 
     void Update()
@@ -49,14 +52,14 @@ public class FireflyController : MonoBehaviour
             Wander();
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        flashTimer -= Time.deltaTime;
+        if (flashTimer <= 0f)
         {
-            int roll = Random.Range(1, 4); // 1-3 chance
-            if (roll == 1)
-            {
-                Flash();
-            }
+            int roll = Random.Range(1, 4);
+            if (roll == 1)  Flash();
+            flashTimer = flashInterval;
         }
+
     }
 
     void Wander()
@@ -74,13 +77,15 @@ public class FireflyController : MonoBehaviour
 
     void Flash()
     {
-        flashCount++;
         StartCoroutine(BlinkTwice());
+        flashCount++;
 
         if (flashCount >= maxFlashes)
         {
             Destroy(gameObject);
         }
+
+        flashTimer = flashInterval;
     }
 
     System.Collections.IEnumerator BlinkTwice()

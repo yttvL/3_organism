@@ -149,7 +149,7 @@ MonoBehaviour:
   pulseHoldTime: 0.1
   pulseDownTime: 0.15
   pulseCooldownDuration: 1
-  deadGreyColor: {r: 0.2, g: 0.2, b: 0.25, a: 1}
+  deadGreyColor: {r: 0, g: 0, b: 0, a: 1}
   deathPopScaleMultiplier: 4
   deathPopDuration: 0.3
   deathFadeDuration: 0.3

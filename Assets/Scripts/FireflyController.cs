@@ -93,4 +93,13 @@ public class FireflyController : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
     }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("BoundaryWall"))
+        {
+            moveDir = -moveDir;
+            dirTimer = Random.Range(dirChangeRange.x, dirChangeRange.y);
+        }
+    }
 }

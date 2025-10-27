@@ -60,6 +60,7 @@ public class PredatorController : MonoBehaviour
 
     void UpdateRest()
     {
+        sr.color = Color.black;
         restTimer -= Time.deltaTime;
         if (restTimer <= 0f)
         {
@@ -110,6 +111,7 @@ public class PredatorController : MonoBehaviour
 
     void UpdateHunt()
     {
+        sr.color = Color.red;
         if (currentTarget == null)
         {
             GoRestAgain();

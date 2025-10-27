@@ -36,7 +36,6 @@ public class PredatorController : MonoBehaviour
         currentScale = 0.7f;
         transform.localScale = Vector3.one * currentScale;
 
-        // start in Rest
         currentState = PredatorState.Rest;
         restTimer = restDuration;
     }

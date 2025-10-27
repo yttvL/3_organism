@@ -28,10 +28,8 @@ public class FireflyController : MonoBehaviour
 
     void Update()
     {
-        // movement
         if (Input.GetMouseButton(0))
         {
-            // move toward mouse if close enough
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             mousePos.z = 0;
             float dist = Vector2.Distance(transform.position, mousePos);

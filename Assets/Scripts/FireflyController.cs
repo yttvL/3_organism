@@ -2,94 +2,113 @@ using UnityEngine;
 
 public class FireflyController : MonoBehaviour
 {
+    private enum FireflyState
+    {
+        Wander,
+        Flash,
+        Chase
+    }
+    FireflyState currentState = FireflyState.Wander;
+
     private int flashCount = 0;
     private float dirTimer;
     private Vector2 moveDir;
 
-    [Header("Movement")]
-    public float moveSpeed = 1f;
-    public Vector2 dirChangeRange = new Vector2(1f, 3f);
-    public float attractSpeed = 2f;
-    public float attractRadius = 3f;
+    [Header("Wander")]
+    public float moveSpeed = 1.5f;
+    public Vector2 dirChangeRange = new Vector2(0.5f, 1f);
 
     [Header("Flash")]
     public int maxFlashes = 3;
     public Color normalColor = Color.yellow;
     public Color flashColor = Color.white;
-    public float flashInterval = 12f;
-    public float flashTimer = 12f;
+    public float flashInterval = 6f;
+    private float flashTimer;
+
+    [Header("Chase")]
+    public float chaseSpeed = 3f;
+    public float attractRadius = 10f;
+    public float followDist = 0.5f;
+    public Color chaseColor = Color.white;
+    private Transform currentTarget;
 
     private SpriteRenderer sr;
+    private bool flashingNow = false;
 
     void Start()
     {
         sr = GetComponent<SpriteRenderer>();
         sr.color = normalColor;
+
         PickNewDirection();
+
         flashTimer = flashInterval;
     }
 
     void Update()
     {
-        if (Input.GetMouseButton(0))
+        switch (currentState)
         {
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            mousePos.z = 0;
-            float dist = Vector2.Distance(transform.position, mousePos);
+            case FireflyState.Wander:
+                sr.color = normalColor;
+                UpdateWander();
+                break;
 
-            if (dist < attractRadius)
+            case FireflyState.Chase:
+                sr.color = chaseColor;
+                UpdateChase();
+                break;
+
+            case FireflyState.Flash:
+                break;
+        }
+    }
+
+    void UpdateWander()
+    {
+        transform.position += (Vector3)(moveDir * moveSpeed * Time.deltaTime);
+
+        dirTimer -= Time.deltaTime;
+        if (dirTimer <= 0f)
+            PickNewDirection();
+
+        flashTimer -= Time.deltaTime;
+        if (flashTimer <= 0f && !flashingNow)
+        {
+            int roll = Random.Range(1, 4);
+            if (roll == 1)
             {
-                Vector3 dir = (mousePos - transform.position).normalized;
-                transform.position += dir * attractSpeed * Time.deltaTime;
+                StartCoroutine(BlinkAndMaybeDie());
+                return;
             }
             else
             {
-                Wander();
+                flashTimer = flashInterval;
             }
         }
-        else
+
+        PickTarget();
+        if (currentTarget != null)
         {
-            Wander();
+            currentState = FireflyState.Chase;
+            return;
         }
-
-        flashTimer -= Time.deltaTime;
-        if (flashTimer <= 0f)
-        {
-            int roll = Random.Range(1, 4);
-            if (roll == 1)  Flash();
-            flashTimer = flashInterval;
-        }
-
-    }
-
-    void Wander()
-    {
-        transform.position += (Vector3)(moveDir * moveSpeed * Time.deltaTime);
-        dirTimer -= Time.deltaTime;
-        if (dirTimer <= 0f) PickNewDirection();
     }
 
     void PickNewDirection()
     {
         moveDir = Random.insideUnitCircle.normalized;
+        if (moveDir.sqrMagnitude < 0.001f)
+            moveDir = Vector2.right;
+
         dirTimer = Random.Range(dirChangeRange.x, dirChangeRange.y);
     }
 
-    void Flash()
+    System.Collections.IEnumerator BlinkAndMaybeDie()
     {
-        StartCoroutine(BlinkTwice());
-        flashCount++;
+        flashingNow = true;
+        currentState = FireflyState.Flash;
 
-        if (flashCount >= maxFlashes)
-        {
-            Destroy(gameObject);
-        }
-
-        flashTimer = flashInterval;
-    }
-
-    System.Collections.IEnumerator BlinkTwice()
-    {
         for (int i = 0; i < 2; i++)
         {
             sr.color = flashColor;
@@ -97,7 +116,79 @@ public class FireflyController : MonoBehaviour
             sr.color = normalColor;
             yield return new WaitForSeconds(0.1f);
         }
+
+        flashCount++;
+        flashTimer = flashInterval;
+
+        if (flashCount >= maxFlashes)
+        {
+            Destroy(gameObject);
+            yield break;
+        }
+
+        flashingNow = false;
+        currentState = FireflyState.Wander;
     }
+
+
+    void UpdateChase()
+    {
+        if (currentTarget == null)
+        {
+            currentState = FireflyState.Wander;
+            return;
+        }
+
+        float dist = Vector2.Distance(currentTarget.position, transform.position);
+
+        PredatorController pc = currentTarget.GetComponent<PredatorController>();
+        if (pc == null ||
+            !pc.isHunting ||
+            dist > attractRadius)
+        {
+            currentTarget = null;
+            currentState = FireflyState.Wander;
+            return;
+        }
+
+        if (dist > followDist)
+        {
+            Vector3 chaseDir = (currentTarget.position - transform.position).normalized;
+            transform.position += chaseDir * chaseSpeed * Time.deltaTime;
+        }
+    }
+
+
+    void PickTarget()
+    {
+        currentTarget = null;
+        PredatorController[] predators = Object.FindObjectsByType<PredatorController>(FindObjectsSortMode.None);
+
+        if (predators.Length == 0) return;
+
+        PredatorController nearest = null;
+        float nearestDist = Mathf.Infinity;
+
+        foreach (PredatorController p in predators)
+        {
+            if (p == null) continue;
+            if (!p.isHunting)
+                continue;
+
+            float dist = Vector2.Distance(transform.position, p.transform.position);
+            if (dist < nearestDist && dist <= attractRadius)
+            {
+                nearestDist = dist;
+                nearest = p;
+            }
+        }
+
+        if (nearest != null)
+        {
+            currentTarget = nearest.transform;
+        }
+    }
+
 
     private void OnTriggerEnter2D(Collider2D other)
     {

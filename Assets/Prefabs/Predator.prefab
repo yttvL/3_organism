@@ -101,7 +101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   restDuration: 5
-  moveSpeed: 1.2
+  moveSpeed: 1.4
   attackRange: 0.2
   killsToDie: 3
   shrinkSpeed: 1

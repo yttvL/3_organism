@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 public class PredatorController : MonoBehaviour
 {
@@ -29,6 +30,7 @@ public class PredatorController : MonoBehaviour
     private Transform currentTarget;
     private float currentScale = 1f;
     private SpriteRenderer sr;
+    public bool isHunting = false;
 
     void Awake()
     {
@@ -46,13 +48,16 @@ public class PredatorController : MonoBehaviour
         {
             case PredatorState.Rest:
                 UpdateRest();
+                isHunting = false;
                 break;
 
             case PredatorState.Hunt:
                 UpdateHunt();
+                isHunting = true;
                 break;
 
             case PredatorState.Dying:
+                isHunting = false;
                 UpdateDying();
                 break;
         }
@@ -78,7 +83,7 @@ public class PredatorController : MonoBehaviour
 
     void PickTarget()
     {
-        PreyController[] preys = Object.FindObjectsByType<PreyController>(FindObjectsSortMode.None);
+        PreyController[] preys = UnityEngine.Object.FindObjectsByType<PreyController>(FindObjectsSortMode.None);
         if (preys.Length == 0)
         {
             currentTarget = null;
